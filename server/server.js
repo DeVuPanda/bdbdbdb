@@ -46,7 +46,8 @@ class TodoSyncServer {
                 break;
 
             case 'initial-sync':
-                // Add todos from the client to the server's todo set
+                // Clear and update server's todo set with client's todos
+                this.todos.clear();
                 message.todos.forEach(todo => this.todos.add(todo));
                 this.broadcastTodos(sender, message);
                 break;
@@ -60,6 +61,14 @@ class TodoSyncServer {
             case 'remove-todo':
                 // Remove todo from the server's todo set
                 this.todos.delete(message.todo);
+                this.broadcastTodos(sender, message);
+                break;
+
+            case 'update-order':
+                // Update the todo list order
+                // Clear and rebuild the todo set in the new order
+                this.todos.clear();
+                message.todos.forEach(todo => this.todos.add(todo));
                 this.broadcastTodos(sender, message);
                 break;
         }

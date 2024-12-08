@@ -83,7 +83,7 @@ class TodoSynchronizer {
         todoList.addEventListener('dragend', (e) => {
             if (e.target.classList.contains('todo-item')) {
                 e.target.classList.remove('dragging');
-                this.saveTodoOrderToLocalStorage();
+                this.syncTodoOrder();
             }
         });
 
@@ -100,11 +100,22 @@ class TodoSynchronizer {
         });
     }
 
-    saveTodoOrderToLocalStorage() {
+    syncTodoOrder() {
+        // Get current todo order
         const todoItems = Array.from(document.querySelectorAll('#todo-list .todo-text'))
             .map(el => el.textContent);
 
+        // Save to local storage
         localStorage.setItem('cross-browser-todos', JSON.stringify(todoItems));
+
+        // Send order update to server
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify({
+                type: 'update-order',
+                userId: this.userId,
+                todos: todoItems
+            }));
+        }
     }
 
     loadInitialTodos() {
@@ -186,6 +197,15 @@ class TodoSynchronizer {
                     this.renderTodo(todo);
                     this.saveTodoToLocalStorage(todo);
                 });
+                break;
+            case 'update-order':
+                // Clear and re-render todos in the new order
+                this.clearAllTodos();
+                message.todos.forEach(todo => {
+                    this.renderTodo(todo);
+                });
+                // Update local storage
+                localStorage.setItem('cross-browser-todos', JSON.stringify(message.todos));
                 break;
         }
     }
