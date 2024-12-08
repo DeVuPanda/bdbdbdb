@@ -6,6 +6,8 @@ class TodoSynchronizer {
         this.userId = this.generateUniqueId();
         this.initializeWebSocket();
         this.setupEventListeners();
+        this.setupDragAndDrop();
+        this.loadInitialTodos();
     }
 
     // Generate a unique identifier for this client
@@ -67,6 +69,55 @@ class TodoSynchronizer {
                 this.removeTodo(todoText);
             }
         });
+    }
+
+    setupDragAndDrop() {
+        const todoList = document.getElementById('todo-list');
+
+        todoList.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('todo-item')) {
+                e.target.classList.add('dragging');
+            }
+        });
+
+        todoList.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('todo-item')) {
+                e.target.classList.remove('dragging');
+                this.saveTodoOrderToLocalStorage();
+            }
+        });
+
+        todoList.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const draggingItem = document.querySelector('.dragging');
+            const siblings = [...todoList.querySelectorAll('.todo-item:not(.dragging)')];
+
+            let nextSibling = siblings.find(sibling => {
+                return e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2;
+            });
+
+            todoList.insertBefore(draggingItem, nextSibling);
+        });
+    }
+
+    saveTodoOrderToLocalStorage() {
+        const todoItems = Array.from(document.querySelectorAll('#todo-list .todo-text'))
+            .map(el => el.textContent);
+
+        localStorage.setItem('cross-browser-todos', JSON.stringify(todoItems));
+    }
+
+    loadInitialTodos() {
+        const todos = this.getTodosFromLocalStorage();
+        if (todos.length > 0) {
+            // Clear existing list before loading
+            this.clearAllTodos();
+
+            // Render todos from local storage
+            todos.forEach(todo => {
+                this.renderTodo(todo);
+            });
+        }
     }
 
     syncInitialTodos() {
