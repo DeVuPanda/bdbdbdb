@@ -89,7 +89,6 @@ h1 {
     background-color: #ff3333;
 }
 
-/* Animation keyframes are now in the script.js */
 @keyframes pulse-green {
     0% { background-color: transparent; }
     50% { background-color: rgba(0, 255, 0, 0.2); }

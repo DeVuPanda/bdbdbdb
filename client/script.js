@@ -11,12 +11,10 @@ class TodoSynchronizer {
         this.setupAnimationStyles();
     }
 
-    // Generate a unique identifier for this client
     generateUniqueId() {
         return 'user-' + Math.random().toString(36).substr(2, 9);
     }
 
-    // Add animation styles to the document
     setupAnimationStyles() {
         const styleEl = document.createElement('style');
         styleEl.textContent = `
@@ -65,12 +63,10 @@ class TodoSynchronizer {
 
             this.socket.onopen = () => {
                 console.log('WebSocket connection established');
-                // Send initial connection message with user ID
                 this.socket.send(JSON.stringify({
                     type: 'connect',
                     userId: this.userId
                 }));
-                // Sync initial todos
                 this.syncInitialTodos();
             };
 
@@ -80,7 +76,6 @@ class TodoSynchronizer {
 
             this.socket.onclose = (event) => {
                 console.log('WebSocket connection closed', event);
-                // Attempt to reconnect after a delay
                 setTimeout(() => this.initializeWebSocket(), 5000);
             };
 
@@ -105,7 +100,6 @@ class TodoSynchronizer {
             }
         });
 
-        // Delegate event for delete buttons
         document.getElementById('todo-list').addEventListener('click', (e) => {
             if (e.target.classList.contains('delete-btn')) {
                 const todoItem = e.target.closest('.todo-item');
@@ -149,10 +143,8 @@ class TodoSynchronizer {
         const todoItems = Array.from(document.querySelectorAll('#todo-list .todo-text'))
             .map(el => el.textContent);
 
-        // Save to local storage
         localStorage.setItem('cross-browser-todos', JSON.stringify(todoItems));
 
-        // Send order update to server
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
             this.socket.send(JSON.stringify({
                 type: 'update-order',
@@ -165,10 +157,8 @@ class TodoSynchronizer {
     loadInitialTodos() {
         const todos = this.getTodosFromLocalStorage();
         if (todos.length > 0) {
-            // Clear existing list before loading
             this.clearAllTodos();
 
-            // Render todos from local storage
             todos.forEach(todo => {
                 this.renderTodo(todo);
             });
@@ -176,7 +166,6 @@ class TodoSynchronizer {
     }
 
     syncInitialTodos() {
-        // Retrieve and send initial todos to the server
         const todos = this.getTodosFromLocalStorage();
         if (todos.length > 0) {
             this.socket.send(JSON.stringify({
@@ -200,7 +189,6 @@ class TodoSynchronizer {
             }));
         }
 
-        // Save to local storage
         this.saveTodoToLocalStorage(todo);
     }
 
@@ -217,12 +205,10 @@ class TodoSynchronizer {
             }));
         }
 
-        // Remove from local storage
         this.removeTodoFromLocalStorage(todo);
     }
 
     handleIncomingMessage(message) {
-        // Ignore messages from the same user
         if (message.userId === this.userId) return;
 
         switch(message.type) {
@@ -235,7 +221,6 @@ class TodoSynchronizer {
                 this.removeTodoFromLocalStorage(message.todo);
                 break;
             case 'initial-sync':
-                // Clear existing todos and add synced todos
                 this.clearAllTodos();
                 message.todos.forEach(todo => {
                     this.renderTodo(todo, true);
@@ -243,23 +228,19 @@ class TodoSynchronizer {
                 });
                 break;
             case 'update-order':
-                // Clear and re-render todos in the new order with animation
                 this.clearAllTodos();
                 message.todos.forEach((todo, index) => {
                     this.renderTodo(todo, true);
 
-                    // Add reorder animation to highlight the change
                     const todoItems = document.querySelectorAll('.todo-item');
                     if (todoItems[index]) {
                         todoItems[index].classList.add('todo-sync-reordered');
 
-                        // Remove animation class after it completes
                         setTimeout(() => {
                             todoItems[index].classList.remove('todo-sync-reordered');
                         }, 1000);
                     }
                 });
-                // Update local storage
                 localStorage.setItem('cross-browser-todos', JSON.stringify(message.todos));
                 break;
         }
@@ -268,7 +249,6 @@ class TodoSynchronizer {
     renderTodo(todo, isSync = false) {
         const todoList = document.getElementById('todo-list');
 
-        // Prevent duplicate todos
         const existingTodos = Array.from(todoList.querySelectorAll('.todo-text'))
             .map(el => el.textContent);
         if (existingTodos.includes(todo)) return;
@@ -277,7 +257,6 @@ class TodoSynchronizer {
         li.className = 'todo-item';
         li.draggable = true;
 
-        // Add sync animation for remotely added todos
         if (isSync) {
             li.classList.add('todo-sync-added');
         }
@@ -294,7 +273,6 @@ class TodoSynchronizer {
         li.appendChild(deleteBtn);
         todoList.appendChild(li);
 
-        // Remove animation class after animation completes
         if (isSync) {
             setTimeout(() => {
                 li.classList.remove('todo-sync-added');
@@ -313,7 +291,6 @@ class TodoSynchronizer {
                 if (isSync) {
                     todoItem.classList.add('todo-sync-removed');
 
-                    // Remove the item after animation
                     setTimeout(() => {
                         todoItem.remove();
                     }, 1000);
@@ -350,8 +327,6 @@ class TodoSynchronizer {
     }
 }
 
-// Initialize the synchronizer when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    // Replace with your actual WebSocket server URL
     const todoSync = new TodoSynchronizer('ws://localhost:8080');
 });

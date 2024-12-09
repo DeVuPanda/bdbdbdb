@@ -7,13 +7,10 @@ class TodoSyncServer {
         this.clients = new Set();
         this.todos = new Set();
 
-        // Create HTTP server
         this.server = http.createServer();
 
-        // Create WebSocket server
         this.wss = new WebSocket.Server({ server: this.server });
 
-        // Set up WebSocket connection handling
         this.wss.on('connection', (ws) => {
             this.clients.add(ws);
 
@@ -26,7 +23,6 @@ class TodoSyncServer {
             });
         });
 
-        // Start the server
         this.server.listen(port, () => {
             console.log(`WebSocket server running on port ${port}`);
         });
@@ -35,7 +31,6 @@ class TodoSyncServer {
     handleMessage(sender, message) {
         switch(message.type) {
             case 'connect':
-                // Send existing todos to the newly connected client
                 if (this.todos.size > 0) {
                     sender.send(JSON.stringify({
                         type: 'initial-sync',
@@ -75,7 +70,6 @@ class TodoSyncServer {
     }
 
     broadcastTodos(sender, message) {
-        // Broadcast the message to all clients except the sender
         this.clients.forEach(client => {
             if (client !== sender && client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify(message));
@@ -84,5 +78,4 @@ class TodoSyncServer {
     }
 }
 
-// Start the server on port 8080
 const todoSyncServer = new TodoSyncServer(8080);
