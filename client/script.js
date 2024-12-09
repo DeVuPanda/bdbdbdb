@@ -8,11 +8,55 @@ class TodoSynchronizer {
         this.setupEventListeners();
         this.setupDragAndDrop();
         this.loadInitialTodos();
+        this.setupAnimationStyles();
     }
 
     // Generate a unique identifier for this client
     generateUniqueId() {
         return 'user-' + Math.random().toString(36).substr(2, 9);
+    }
+
+    // Add animation styles to the document
+    setupAnimationStyles() {
+        const styleEl = document.createElement('style');
+        styleEl.textContent = `
+            @keyframes pulse-green {
+                0% { background-color: transparent; }
+                50% { background-color: rgba(0, 255, 0, 0.2); }
+                100% { background-color: transparent; }
+            }
+
+            @keyframes pulse-red {
+                0% { background-color: transparent; }
+                50% { background-color: rgba(255, 0, 0, 0.2); }
+                100% { background-color: transparent; }
+            }
+
+            @keyframes slide-in {
+                from { 
+                    transform: translateX(-100%);
+                    opacity: 0;
+                }
+                to { 
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            .todo-sync-added {
+                animation: slide-in 0.5s ease-out, pulse-green 1s;
+            }
+
+            .todo-sync-removed {
+                animation: pulse-red 1s;
+                text-decoration: line-through;
+            }
+
+            .todo-sync-reordered {
+                animation: pulse-green 1s;
+            }
+        `;
+        document.head.appendChild(styleEl);
     }
 
     initializeWebSocket() {
@@ -183,26 +227,37 @@ class TodoSynchronizer {
 
         switch(message.type) {
             case 'add-todo':
-                this.renderTodo(message.todo);
+                this.renderTodo(message.todo, true);
                 this.saveTodoToLocalStorage(message.todo);
                 break;
             case 'remove-todo':
-                this.removeTodoFromLocalDOM(message.todo);
+                this.removeTodoFromLocalDOM(message.todo, true);
                 this.removeTodoFromLocalStorage(message.todo);
                 break;
             case 'initial-sync':
                 // Clear existing todos and add synced todos
                 this.clearAllTodos();
                 message.todos.forEach(todo => {
-                    this.renderTodo(todo);
+                    this.renderTodo(todo, true);
                     this.saveTodoToLocalStorage(todo);
                 });
                 break;
             case 'update-order':
-                // Clear and re-render todos in the new order
+                // Clear and re-render todos in the new order with animation
                 this.clearAllTodos();
-                message.todos.forEach(todo => {
-                    this.renderTodo(todo);
+                message.todos.forEach((todo, index) => {
+                    this.renderTodo(todo, true);
+
+                    // Add reorder animation to highlight the change
+                    const todoItems = document.querySelectorAll('.todo-item');
+                    if (todoItems[index]) {
+                        todoItems[index].classList.add('todo-sync-reordered');
+
+                        // Remove animation class after it completes
+                        setTimeout(() => {
+                            todoItems[index].classList.remove('todo-sync-reordered');
+                        }, 1000);
+                    }
                 });
                 // Update local storage
                 localStorage.setItem('cross-browser-todos', JSON.stringify(message.todos));
@@ -210,7 +265,7 @@ class TodoSynchronizer {
         }
     }
 
-    renderTodo(todo) {
+    renderTodo(todo, isSync = false) {
         const todoList = document.getElementById('todo-list');
 
         // Prevent duplicate todos
@@ -221,6 +276,11 @@ class TodoSynchronizer {
         const li = document.createElement('li');
         li.className = 'todo-item';
         li.draggable = true;
+
+        // Add sync animation for remotely added todos
+        if (isSync) {
+            li.classList.add('todo-sync-added');
+        }
 
         const todoText = document.createElement('span');
         todoText.className = 'todo-text';
@@ -233,18 +293,38 @@ class TodoSynchronizer {
         li.appendChild(todoText);
         li.appendChild(deleteBtn);
         todoList.appendChild(li);
+
+        // Remove animation class after animation completes
+        if (isSync) {
+            setTimeout(() => {
+                li.classList.remove('todo-sync-added');
+            }, 2000);
+        }
     }
 
-    removeTodoFromLocalDOM(todo) {
+    removeTodoFromLocalDOM(todo, isSync = false) {
         const todoList = document.getElementById('todo-list');
         const todoItems = todoList.querySelectorAll('.todo-text');
 
         todoItems.forEach(todoEl => {
             if (todoEl.textContent === todo) {
-                todoEl.closest('.todo-item').remove();
+                const todoItem = todoEl.closest('.todo-item');
+
+                if (isSync) {
+                    todoItem.classList.add('todo-sync-removed');
+
+                    // Remove the item after animation
+                    setTimeout(() => {
+                        todoItem.remove();
+                    }, 1000);
+                } else {
+                    todoItem.remove();
+                }
             }
         });
     }
+
+
 
     clearAllTodos() {
         document.getElementById('todo-list').innerHTML = '';

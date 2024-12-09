@@ -1,3 +1,54 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+.container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+#todo-form {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+#todo-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+}
+
+#todo-form button {
+    padding: 10px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#todo-form button:hover {
+    background-color: #45a049;
+}
+
+#todo-list {
+    list-style-type: none;
+    padding: 0;
+}
+
 .todo-item {
     cursor: move;
     padding: 10px;
@@ -6,16 +57,22 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: white;
+    border-radius: 4px;
+    transition: all 0.3s ease;
 }
 
 .todo-item.dragging {
     opacity: 0.5;
     background-color: #f0f0f0;
+    transform: scale(1.02);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .todo-text {
     flex-grow: 1;
     margin-right: 10px;
+    word-break: break-word;
 }
 
 .delete-btn {
@@ -24,4 +81,47 @@
     border: none;
     padding: 5px 10px;
     cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.delete-btn:hover {
+    background-color: #ff3333;
+}
+
+/* Animation keyframes are now in the script.js */
+@keyframes pulse-green {
+    0% { background-color: transparent; }
+    50% { background-color: rgba(0, 255, 0, 0.2); }
+    100% { background-color: transparent; }
+}
+
+@keyframes pulse-red {
+    0% { background-color: transparent; }
+    50% { background-color: rgba(255, 0, 0, 0.2); }
+    100% { background-color: transparent; }
+}
+
+@keyframes slide-in {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.todo-sync-added {
+    animation: slide-in 0.5s ease-out, pulse-green 1s;
+}
+
+.todo-sync-removed {
+    animation: pulse-red 1s;
+    text-decoration: line-through;
+}
+
+.todo-sync-reordered {
+    animation: pulse-green 1s;
 }

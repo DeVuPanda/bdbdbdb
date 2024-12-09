@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cross-Browser Synchronized Todo List</title>
+    <title>Cross-Browser Todo List</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -11,7 +11,13 @@
     <h1>Cross-Browser Todo List</h1>
 
     <form id="todo-form">
-        <input type="text" id="todo-input" placeholder="Enter a new todo" required>
+        <input
+                type="text"
+                id="todo-input"
+                placeholder="Enter a new todo"
+                required
+                maxlength="100"
+        >
         <button type="submit">Add Todo</button>
     </form>
 
